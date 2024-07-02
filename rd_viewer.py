@@ -50,15 +50,14 @@ def parse_user_device_id(dev_id_str):
     vid = int(ids[0], base=16)
     pid = int(ids[1], base=16)
     
-    device = usb.core.find(idVendor=vid, idProduct=pid)
-    if device is None:
+    hid = usb.core.find(idVendor=vid, idProduct=pid)
+    if hid is None:
         raise Exception("Device {0} not found".format(dev_id_str))
     
-    if is_hid(device) == False:
+    if is_hid(hid):
+        return hid
+    else:
         raise Exception("Device {0} has no HID class interface".format(dev_id_str))
-    
-    return device
-
 
 def read_rd(hid, ofile_name):
     ofile = sys.stdout
@@ -85,7 +84,7 @@ try:
             help="show program version information and exit")
     cmd_parser.add_argument("-d", "--device", 
             help="specific device to read",
-            metavar="pid:vid",
+            metavar="vid:pid",
             default='')
     cmd_parser.add_argument("-o", "--output", 
             help="write Report descriptor to given file instead of stdout",
@@ -105,7 +104,11 @@ try:
     i = 1
     hid_devices = []
     for hid in usb.core.find(find_all=True, custom_match = is_hid):
-        print("{0}) {2} - {1} - ID {3:04x}:{4:04x}".format(i, 
+        try:
+            usb.util.get_langids(hid)
+        except Exception as e:
+            continue  #Avoid scan crash due to acess denial
+        print("{0}) {2} - {1} - ID {3:04x}:{4:04x}".format(i,
                 hid.product, 
                 hid.manufacturer,
                 hid.idVendor,
@@ -135,5 +138,5 @@ try:
     exit(ret)    
             
 except Exception as e:
-    print(e)
+    print("Exception:", str(e))
     exit(-1)

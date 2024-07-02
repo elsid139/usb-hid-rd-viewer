@@ -101,7 +101,7 @@ class HIDReportDescriptorReader:
             self.report_descriptor = None
             for d in range(n_descriptors):
                 desc_type = desc_bytes[6 + (d*3)]
-                desc_length = desc_bytes[7 + (d*3)] | (desc_bytes[8 + (d*3)])
+                desc_length = desc_bytes[7 + (d*3)] | ((desc_bytes[8 + (d*3)]) << 8)
                 if desc_type == _USB_HID_CLASS_REPORT_DESCRIPTOR_TYPE:
                     self.report_descriptor = device.ctrl_transfer(_USB_CLASS_bmRequestType_GET_DESCRIPTOR,
                                 _USB_CLASS_bRequest_GET_DESCRIPTOR,
